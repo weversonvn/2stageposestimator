@@ -18,7 +18,8 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import bob.ip.gabor
-
+from sklearn.decomposition import PCA, KernelPCA
+from sklearn.datasets import make_circles
 
 face_cascade = cv2.CascadeClassifier('/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml')
 eye_cascade = cv2.CascadeClassifier('/usr/share/opencv/haarcascades/haarcascade_eye.xml')

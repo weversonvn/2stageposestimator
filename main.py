@@ -1,16 +1,16 @@
 __author__ = "Weverson Nascimento"
 __credits__ = ["Weverson Nascimento"]
 __license__ = "apache-2.0"
-__version__ = "1.0.1"
+__version__ = "0.1"
 __maintainer__ = "Weverson Nascimento"
 __email__ = "weverson@ufpa.br"
 __status__ = "Production"
 
 '''
-    File name: teste.py
+    File name: main.py
     Author: Weverson Nascimento
     Date created: 24/09/2017
-    Date last modified: 25/11/2017
+    Date last modified: 12/12/2017
     Python Version: 2.7
 '''
 
@@ -34,19 +34,15 @@ __status__ = "Production"
 
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
 import bob.ip.gabor
-from sklearn.decomposition import PCA, KernelPCA
-from sklearn.datasets import make_circles
-
-face_cascade = cv2.CascadeClassifier('/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml')
-eye_cascade = cv2.CascadeClassifier('/usr/share/opencv/haarcascades/haarcascade_eye.xml')
+#from sklearn.decomposition import PCA, KernelPCA
+from pre import pre
 
 
-img = cv2.imread('/home/weverson/Downloads/HeadPoseImageDatabase/Front/personne01146+0+0.jpg')
-gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY )
+imagem = pre('/home/weverson/Downloads/HeadPoseImageDatabase/Front/personne01146+0+0.jpg')
 gwt = bob.ip.gabor.Transform(number_of_scales = 6)
-trafo_image = gwt(gray)
+trafo_image = gwt(imagem)
 
 
 # plot the results of the transform for some wavelets

@@ -32,6 +32,7 @@ __status__ = "Production"
 '''
 
 
+import os
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt 
@@ -39,24 +40,23 @@ import bob.ip.gabor
 from sklearn.decomposition import PCA, KernelPCA
 from pre import pre
 
-
 imagem = pre('/home/weverson/Downloads/HeadPoseImageDatabase/Front/personne01146+0+0.jpg') # imagem de entrada
-# extracao de coeficientes com wavelet de Gabor
-gwt = bob.ip.gabor.Transform(number_of_scales = 6) # cria a transformada
-trafo_image = gwt(imagem) # aplica a transformada na imagem
 
-# projecao no subespaco KPCA
-# aplica o KPCA nos coeficientes reais da wavelet
-#kpca = KernelPCA(kernel="rbf", fit_inverse_transform=True, gamma=10) # cria a transformada de projecao
-#X_kpca = kpca.fit_transform(trafo_image) # aplica o KPCA 
+def treino(imagem):
+    # extracao de coeficientes com wavelet de Gabor
+    gwt = bob.ip.gabor.Transform(number_of_scales = 6) # cria a transformada
+    trafo_image = gwt(imagem) # aplica a transformada na imagem
 
+    # projecao no subespaco KPCA
+    # aplica o KPCA nos coeficientes reais da wavelet
+    #kpca = KernelPCA(kernel="rbf", fit_inverse_transform=True, gamma=10) # cria a transformada de projecao
+    #X_kpca = kpca.fit_transform(trafo_image) # aplica o KPCA
+
+def teste():
 
 # plot the results of the transform for some wavelets
-for scale in (0,2,4):
-  for direction in (0,2,4):
-    plt.subplot(3,6,4+scale*3+direction/2)
-    plt.imshow(np.real(trafo_image[scale*gwt.number_of_directions+direction]), cmap='gray')
-    plt.title("Scale %d, direction %d" % (scale, direction))
-    plt.gca().invert_yaxis()
-
-plt.show()
+for scale in (0,1,2,3,4,5):
+    for direction in (0,1,2,3,4,5,6,7):
+        plt.imshow(np.real(trafo_image[scale*gwt.number_of_directions+direction]), cmap='gray')
+        plt.title("Scale %d, direction %d" % (scale, direction))
+        plt.show()

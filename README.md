@@ -19,10 +19,11 @@ A biblioteca **Bob's Gabor wavelet routines** é mais facilmente instalada usand
 1. Adicione o repositório que contem a biblioteca: `conda config --add channels https://www.idiap.ch/software/bob/conda`
 2. Instale usando `conda install bob.ip.gabor`
 
+Se julgar necessário, crie um ambiente separado no Anaconda para executar todas as instalações necessárias.
 
-##### Importante
+##### Importante:
 
-O OpenCV que é instalado não utiliza GTK, o que é necessário para a criação das janelas de exibição de imagem. Por isso, é necessário instalar o OpenCV manualmente via código fonte, conforme procedimento a seguir:
+O OpenCV que é instalado não utiliza GTK, que é necessário para a criação das janelas de exibição de imagem. Por isso, é necessário instalar o OpenCV manualmente via código fonte e habilitar o uso do GTK, conforme procedimento a seguir:
 
 1. Instale as dependências do OpenCV conforme descrito na documentação;
 2. Baixe o código fonte do site do OpenCV e extraia o mesmo;
@@ -33,7 +34,7 @@ O OpenCV que é instalado não utiliza GTK, o que é necessário para a criaçã
 - o comando para usar GTK `WITH_GTK WITH_GTK_2_X`
 5. O comando final seria algo como `cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/home/usuario/anaconda2/ -D PYTHON2_EXECUTABLE=/home/usuario/anaconda2/bin/python WITH_GTK WITH_GTK_2_X ..`.
 6. Confirme, ao final da execução do `cmake`, se entre os itens que serão compilados está o python. Eventualmente, o python é detectado mas seus componentes não, então seria necessário incluir o restante dos parâmetros manualmente;
-7. Instalar a biblioteca com `make -j2`;
+7. Compilar a biblioteca com `make -j2`;
 8. Instalar com `sudo make install`;
 9. Executar os comandos `echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf` e `sudo ldconfig`.
 

@@ -7,10 +7,10 @@ __email__ = "weverson@ufpa.br"
 __status__ = "Production"
 
 '''
-    File name: main.py
+    File name: kpcasub.py
     Author: Weverson Nascimento
-    Date created: 24/09/2017
-    Date last modified: 18/12/2017
+    Date created: 14/12/2017
+    Date last modified: 17/12/2017
     Python Version: 2.7
 '''
 
@@ -32,25 +32,9 @@ __status__ = "Production"
 '''
 
 
-import os
-import numpy as np
-import cv2
-import matplotlib.pyplot as plt 
-import bob.ip.gabor
 from sklearn.decomposition import KernelPCA
-from pre import pre
 
-imagem = pre('/home/weverson/Downloads/HeadPoseImageDatabase/Front/personne01146+0+0.jpg') # imagem de entrada
-
-def treino(imagem):
-    # extracao de coeficientes com wavelet de Gabor
-    gwt = bob.ip.gabor.Transform(number_of_scales = 6) # cria a transformada
-    trafo_image = gwt(imagem) # aplica a transformada na imagem
-
-    # projecao no subespaco KPCA
-    # aplica o KPCA nos coeficientes reais da wavelet
-    #kpca = KernelPCA(kernel="rbf", fit_inverse_transform=True, gamma=10) # cria a transformada de projecao
-    #X_kpca = kpca.fit_transform(trafo_image) # aplica o KPCA
-
-#def teste():
-
+def projecaokpca(array, escalas, rotacoes):
+    for escala in range(escalas):
+        for rotacao in range(rotacoes):
+            np.real(array[escala*rotacoes+rotacao])

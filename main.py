@@ -45,6 +45,7 @@ from sklearn.decomposition import KernelPCA
 
 from pre import pre
 from kpcasub import projecaokpca
+
 #print(__doc__)
 
 
@@ -64,6 +65,8 @@ def wavextract(imagem):
 def readimg(caminho):
     pessoa = 1
     serie = 1
+    wav_coefs = np.empty([0,3685])
+    cont = 0
     for pessoa in range(1,16):
         for serie in range(1,3):
             for i in range(93):
@@ -85,13 +88,14 @@ def readimg(caminho):
                 if tilt >= 0:
                     tiltplus = "+"
                 imgfile = caminho + 'Person' + str(pessoa).zfill(2) + '/person' + str(pessoa).zfill(2) + str(serie) + str(i).zfill(2) + tiltplus + str(tilt) + panplus + str(pan) + '.jpg'
-                if i == 1:
-                    print imgfile
                 imagem = pre(imgfile)
-                wav_coefs = wavextract(imagem)
+                wav_coefs[cont] = np.append(wav_coefs,[wavextract(imagem)],axis=0)
+                cont = cont + 1
+    return wav_coefs
 
     
 if __name__ == '__main__':
-    caminho = sys.argv[1]
-    readimg(caminho)
+    caminho = sys.argv[1] # o caminho do dataset de imagens
+    wav_coefs = readimg(caminho)
+    print wav_coefs.shape
 

@@ -28,13 +28,11 @@ __status__ = "Production"
     File name: main.py
     Author: Weverson Nascimento
     Date created: 24/09/2017
-    Date last modified: 22/12/2017
+    Date last modified: 25/12/2017
     Python Version: 2.7
 '''
 
 
-
-#import os
 import sys
 import numpy as np
 
@@ -57,7 +55,7 @@ def wavextract(imagem):
     trafo_image = gwt(imagem) # aplica a transformada na imagem
     for escala in range(escalas):
         for rotacao in range(rotacoes):
-            real = np.real(X[escala*rotacoes+rotacao]) # extrai parte real
+            real = np.real(trafo_image[escala*rotacoes+rotacao]) # extrai parte real
             wav_coefs = np.reshape(real,3685) # vetoriza a matriz
     return wav_coefs
 
@@ -66,7 +64,6 @@ def readimg(caminho):
     pessoa = 1
     serie = 1
     wav_coefs = np.empty([0,3685])
-    cont = 0
     for pessoa in range(1,16):
         for serie in range(1,3):
             for i in range(93):
@@ -89,8 +86,7 @@ def readimg(caminho):
                     tiltplus = "+"
                 imgfile = caminho + 'Person' + str(pessoa).zfill(2) + '/person' + str(pessoa).zfill(2) + str(serie) + str(i).zfill(2) + tiltplus + str(tilt) + panplus + str(pan) + '.jpg'
                 imagem = pre(imgfile)
-                wav_coefs[cont] = np.append(wav_coefs,[wavextract(imagem)],axis=0)
-                cont = cont + 1
+                wav_coefs = np.append(wav_coefs,[wavextract(imagem)],axis=0)
     return wav_coefs
 
     

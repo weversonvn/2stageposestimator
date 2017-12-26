@@ -1,21 +1,6 @@
-__author__ = "Weverson Nascimento"
-__credits__ = ["Weverson Nascimento"]
-__license__ = "apache-2.0"
-__version__ = "0.1"
-__maintainer__ = "Weverson Nascimento"
-__email__ = "weverson@ufpa.br"
-__status__ = "Production"
+"""
+   pre
 
-'''
-    File name: pre.py
-    Author: Weverson Nascimento
-    Date created: 24/09/2017
-    Date last modified: 12/12/2017
-    Python Version: 2.7
-'''
-
-
-'''
    Copyright 2017 Weverson Nascimento
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,11 +14,26 @@ __status__ = "Production"
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+"""
+
+__author__ = "Weverson Nascimento"
+__credits__ = ["Weverson Nascimento"]
+__license__ = "apache-2.0"
+__version__ = "0.1"
+__maintainer__ = "Weverson Nascimento"
+__email__ = "weverson@ufpa.br"
+__status__ = "Production"
+
+'''
+    File name: pre.py
+    Author: Weverson Nascimento
+    Date created: 24/09/2017
+    Date last modified: 25/12/2017
+    Python Version: 2.7
 '''
 
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt # para teste
 
 
 def pre(caminho):
@@ -54,11 +54,4 @@ def pre(caminho):
         for (ex,ey,ew,eh) in eyes:
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2) # draw a rectangle on each eye detected
 
-    #print np.shape(roi_color)
-    #plt.imshow(resized_img)
-    #plt.show()
-
-    #cv2.imshow('Imagem',resized_img) # show image
-    #cv2.waitKey(0) # wait for a key to exit
-    #cv2.destroyAllWindows() # exit
     return resized_img

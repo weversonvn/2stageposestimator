@@ -60,12 +60,12 @@ def wavextract(imagem):
     return wav_coefs
 
 
-def readimg(caminho):
+def readimg(caminho, n):
     pessoa = 1
     serie = 1
     wav_coefs = np.empty([0,3685])
     for pessoa in range(1,16):
-        for serie in range(1,3):
+        for serie in range(n+1,n+2):
             for i in range(93):
                 panplus = ""
                 tiltplus = ""
@@ -92,6 +92,6 @@ def readimg(caminho):
     
 if __name__ == '__main__':
     caminho = sys.argv[1] # o caminho do dataset de imagens
-    wav_coefs = readimg(caminho)
-    print wav_coefs.shape
+    wav_coefs = readimg(caminho, 0) # 0 para treino, 1 para teste
+    kpca_project = projecaokpca(wav_coefs)
 

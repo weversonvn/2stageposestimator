@@ -46,12 +46,12 @@ def pre(caminho):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # converte para tons de cinza
     faces = face_cascade.detectMultiScale(gray, 1.3, 5) # detecta faces
     if len(faces) == 0:
-        resized_img = np.zeros([55,67]) # zera a imagem caso nao detecte face
+        resized_img = np.zeros([67,55]) # zera a imagem caso nao detecte face
     for (x,y,w,h) in faces:
         cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2) # draw a rectangle on  each face detected
         roi_gray = gray[y:y+h, x:x+w] # crop gray image
         roi_color = img[y:y+h, x:x+w] # crop original image
-        resized_img = cv2.resize(roi_gray, (67,55))
+        resized_img = cv2.resize(roi_gray, (55,67))
         eyes = eye_cascade.detectMultiScale(roi_gray) # detect eyes
         for (ex,ey,ew,eh) in eyes:
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2) # draw a rectangle on each eye detected

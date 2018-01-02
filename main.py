@@ -35,6 +35,7 @@ __status__ = "Production"
 
 import sys
 import numpy as np
+import pickle # para salvar em arquivo as variaveis
 
 import cv2
 import matplotlib.pyplot as plt
@@ -101,11 +102,12 @@ def dtwt(mat_paths): # do the whole thing
             wav_mean_vet = np.mean(wav_mean,axis=0)
             wav_coefs = np.append(wav_coefs,[wav_mean_vet],axis=0)
         prototipo[rotation], kpca[rotation] = projecaokpca(wav_coefs)
-    return prototipo, kpca
+    with open('treino.pk1','w') as f:     # salva no arquivo treino.pk1
+        pickle.dump([prototipo, kpca], f) # as variaveis prototipo e kpca
 
 
 if __name__ == '__main__':
     caminho = sys.argv[1] # o caminho do dataset de imagens
     mat_paths = readpath(caminho, 0) # 0 para treino, 1 para teste
-    prototipo, kpca = dtwt(mat_paths)
+    dtwt(mat_paths)
 

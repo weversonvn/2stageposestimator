@@ -28,7 +28,7 @@ __status__ = "Production"
     File name: kpcasub.py
     Author: Weverson Nascimento
     Date created: 14/12/2017
-    Date last modified: 20/12/2017
+    Date last modified: 30/12/2017
     Python Version: 2.7
 '''
 
@@ -36,12 +36,8 @@ __status__ = "Production"
 from sklearn.decomposition import KernelPCA
 
 def projecaokpca(X):
-    kpca = KernelPCA(n_components=30, kernel="rbf", n_jobs=-1)
-    coeficientes = np.empty([escalas*rotacoes,55,55])
-    for escala in range(escalas):
-        for rotacao in range(rotacoes):
-            # para cada rotacao, cria prototipos
-            real = np.real(X[escala*rotacoes+rotacao])
-            coeficientes[escala*rotacoes+rotacao]= kpca.fit_transform(real)
+    p = 1
+    kpca = KernelPCA(n_components=p, kernel="rbf", n_jobs=-1)
+    coeficientes = kpca.fit_transform(X)
 
-    return coeficientes
+    return coeficientes, kpca

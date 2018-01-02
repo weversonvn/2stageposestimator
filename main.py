@@ -28,7 +28,7 @@ __status__ = "Production"
     File name: main.py
     Author: Weverson Nascimento
     Date created: 24/09/2017
-    Date last modified: 25/12/2017
+    Date last modified: 01/01/2018
     Python Version: 2.7
 '''
 
@@ -37,7 +37,7 @@ import sys
 import numpy as np
 
 import cv2
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 import bob.ip.gabor
 from sklearn.decomposition import KernelPCA
 
@@ -51,22 +51,18 @@ def wavextract(imagem):
     # extracao de coeficientes com wavelet de Gabor
     escalas = 6
     gwt = bob.ip.gabor.Transform(number_of_scales = escalas) # cria a transformada
-    rotacoes = gwt.number_of_directions
     trafo_image = gwt(imagem) # aplica a transformada na imagem
-    for escala in range(escalas):
-        for rotacao in range(rotacoes):
-            real = np.real(trafo_image[escala*rotacoes+rotacao]) # extrai parte real
-            wav_coefs = np.reshape(real,3685) # vetoriza a matriz
-    return wav_coefs
+    #return trafo_img, escalas, gwt.number_of_directions
+    return trafo_image
 
 
-def readimg(caminho, n):
+def readpath(caminho, n):
     pessoa = 1
     serie = 1
-    wav_coefs = np.empty([0,3685])
-    for pessoa in range(1,16):
+    mat_paths = np.empty([93,15],dtype=object)
+    for i in range(93):
         for serie in range(n+1,n+2):
-            for i in range(93):
+            for pessoa in range(1,16):
                 panplus = ""
                 tiltplus = ""
                 if i == 0:
@@ -84,14 +80,32 @@ def readimg(caminho, n):
                     panplus = "+"
                 if tilt >= 0:
                     tiltplus = "+"
-                imgfile = caminho + 'Person' + str(pessoa).zfill(2) + '/person' + str(pessoa).zfill(2) + str(serie) + str(i).zfill(2) + tiltplus + str(tilt) + panplus + str(pan) + '.jpg'
-                imagem = pre(imgfile)
-                wav_coefs = np.append(wav_coefs,[wavextract(imagem)],axis=0)
-    return wav_coefs
+                mat_paths[i,pessoa-1] = caminho + 'Person' + str(pessoa).zfill(2) + '/person' + str(pessoa).zfill(2) + str(serie) + str(i).zfill(2) + tiltplus + str(tilt) + panplus + str(pan) + '.jpg'
+    return mat_paths
 
-    
+
+def dtwt(mat_paths): # do the whole thing
+    prototipo = np.empty([48,93,3685])
+    kpca = np.empty([48],dtype=object)
+    for rotation in range(48):
+        wav_coefs = np.empty([0,3685])
+        for pose in range(93):
+            print 'rotacao ' + str(rotation) + ' pose ' + str(pose)
+            wav_mean = np.empty([0,3685])
+            for person in range(15):
+                img_cropped = pre(mat_paths[pose,person])
+                trafo_image = wavextract(img_cropped)
+                magnitude = np.abs(trafo_image[rotation]) # usa somente a magnitude
+                wav_vet = np.reshape(magnitude,3685) # vetoriza a matriz
+                wav_mean = np.append(wav_mean,[wav_vet],axis=0)
+            wav_mean_vet = np.mean(wav_mean,axis=0)
+            wav_coefs = np.append(wav_coefs,[wav_mean_vet],axis=0)
+        prototipo[rotation], kpca[rotation] = projecaokpca(wav_coefs)
+    return prototipo, kpca
+
+
 if __name__ == '__main__':
     caminho = sys.argv[1] # o caminho do dataset de imagens
-    wav_coefs = readimg(caminho, 0) # 0 para treino, 1 para teste
-    kpca_project = projecaokpca(wav_coefs)
+    mat_paths = readpath(caminho, 0) # 0 para treino, 1 para teste
+    prototipo, kpca = dtwt(mat_paths)
 

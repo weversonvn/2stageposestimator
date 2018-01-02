@@ -102,7 +102,7 @@ def dtwt(mat_paths): # do the whole thing
             wav_mean_vet = np.mean(wav_mean,axis=0)
             wav_coefs = np.append(wav_coefs,[wav_mean_vet],axis=0)
         prototipo[rotation], kpca[rotation] = projecaokpca(wav_coefs)
-    with open('treino.pk1','w') as f:     # salva no arquivo treino.pk1
+    with open('treino.pkl','w') as f:     # salva no arquivo treino.pkl
         pickle.dump([prototipo, kpca], f) # as variaveis prototipo e kpca
 
 

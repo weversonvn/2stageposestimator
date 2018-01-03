@@ -28,7 +28,7 @@ __status__ = "Production"
     File name: main.py
     Author: Weverson Nascimento
     Date created: 24/09/2017
-    Date last modified: 01/01/2018
+    Date last modified: 03/01/2018
     Python Version: 2.7
 '''
 
@@ -86,12 +86,12 @@ def readpath(caminho, n):
 
 
 def dtwt(mat_paths): # do the whole thing
-    prototipo = np.empty([48,93,3685])
+    prototipo = np.empty([48,93,1])
     kpca = np.empty([48],dtype=object)
     for rotation in range(48):
         wav_coefs = np.empty([0,3685])
         for pose in range(93):
-            print 'rotacao ' + str(rotation) + ' pose ' + str(pose)
+            print 'rotacao ' + str(rotation) + '/48 pose ' + str(pose) + ' /93'
             wav_mean = np.empty([0,3685])
             for person in range(15):
                 img_cropped = pre(mat_paths[pose,person])

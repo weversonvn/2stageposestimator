@@ -86,21 +86,22 @@ def readpath(caminho, n):
 
 
 def dtwt(mat_paths): # do the whole thing
-    prototipo = np.empty([48,93,1])
-    kpca = np.empty([48],dtype=object)
-    for rotation in range(48):
-        wav_coefs = np.empty([0,3685])
+    prototipo = np.empty([10,93,1])
+    kpca = np.empty([10],dtype=object)
+    for rotation in range(10):
+        wav_coefs = np.empty([0])
         for pose in range(93):
-            print 'rotacao ' + str(rotation) + '/48 pose ' + str(pose) + ' /93'
-            wav_mean = np.empty([0,3685])
+            print 'rotacao ' + str(rotation) + '/9 pose ' + str(pose) + '/92'
+            wav_mean = np.empty([0])
             for person in range(15):
                 img_cropped = pre(mat_paths[pose,person])
                 trafo_image = wavextract(img_cropped)
-                magnitude = np.abs(trafo_image[rotation]) # usa somente a magnitude
-                wav_vet = np.reshape(magnitude,3685) # vetoriza a matriz
-                wav_mean = np.append(wav_mean,[wav_vet],axis=0)
+                magnitude = np.linalg.norm(trafo_image[rotation]) # usa somente a magnitude
+                #wav_vet = np.reshape(magnitude,3685) # vetoriza a matriz
+                wav_mean = np.append(wav_mean,[magnitude],axis=0)
             wav_mean_vet = np.mean(wav_mean,axis=0)
             wav_coefs = np.append(wav_coefs,[wav_mean_vet],axis=0)
+        wav_coefs = np.reshape(wav_coefs,(93,1))
         prototipo[rotation], kpca[rotation] = projecaokpca(wav_coefs)
     with open('treino.pkl','w') as f:     # salva no arquivo treino.pkl
         pickle.dump([prototipo, kpca], f) # as variaveis prototipo e kpca

@@ -86,29 +86,64 @@ def readpath(caminho, n):
 
 
 def dtwt(mat_paths): # do the whole thing
-    prototipo = np.empty([10,93,1])
-    kpca = np.empty([10],dtype=object)
+    prototipo = np.empty([48,93,1])
+    kpca = np.empty([48],dtype=object)
     for rotation in range(10):
-        wav_coefs = np.empty([0])
+        wav_coefs = np.empty([0,3685])
         for pose in range(93):
             print 'rotacao ' + str(rotation) + '/9 pose ' + str(pose) + '/92'
-            wav_mean = np.empty([0])
+            wav_mean = np.empty([0,3685])
             for person in range(15):
                 img_cropped = pre(mat_paths[pose,person])
                 trafo_image = wavextract(img_cropped)
-                magnitude = np.linalg.norm(trafo_image[rotation]) # usa somente a magnitude
-                #wav_vet = np.reshape(magnitude,3685) # vetoriza a matriz
-                wav_mean = np.append(wav_mean,[magnitude],axis=0)
+                magnitude = np.abs(trafo_image[rotation]) # usa somente a magnitude
+                wav_vet = np.reshape(magnitude,3685) # vetoriza a matriz
+                wav_mean = np.append(wav_mean,[wav_vet],axis=0)
             wav_mean_vet = np.mean(wav_mean,axis=0)
             wav_coefs = np.append(wav_coefs,[wav_mean_vet],axis=0)
-        wav_coefs = np.reshape(wav_coefs,(93,1))
         prototipo[rotation], kpca[rotation] = projecaokpca(wav_coefs)
     with open('treino.pkl','w') as f:     # salva no arquivo treino.pkl
         pickle.dump([prototipo, kpca], f) # as variaveis prototipo e kpca
 
 
+def teste(caminho, prototipo, kpca):
+    mat_paths = readpath(caminho, 1)
+    dk = np.empty([93*15,48],dtype=int)
+    print 'calculando dk'
+    for rotation in range(10):
+        for pose in range(93):
+            print 'rotacao ' + str(rotation) + '/9 pose ' + str(pose) + '/92'
+            for person in range(15):
+                img_cropped = pre(mat_paths[pose,person])
+                trafo_image = wavextract(img_cropped)
+                magnitude = np.abs(trafo_image[rotation]) # usa somente a magnitude
+                wav_vet = np.reshape(magnitude,(1,3685))
+                y = kpca[rotation].transform(wav_vet)
+                dk[pose+person,rotation] = np.argmin(np.abs(y-prototipo[rotation]))
+    acerto = np.empty([93*15],dtype=bool)
+    print 'calculando acertos'
+    for pose in range(93):
+        print 'pose ' + str(pose) + '/92'
+        for person in range(15):
+            c = np.argmax(np.bincount(dk[pose+person])) # anota a classe
+            acerto[pose+person] = c==pose
+    acertos = np.count_nonzero(acerto)
+    taxa = (acertos/93*15)*100
+    print 'acertos = ' + str(acertos) + ' de 1395 (' + str(taxa) + '%)'
+
+
 if __name__ == '__main__':
-    caminho = sys.argv[1] # o caminho do dataset de imagens
-    mat_paths = readpath(caminho, 0) # 0 para treino, 1 para teste
-    dtwt(mat_paths)
+    try:
+        caminho = sys.argv[1] # o caminho do dataset de imagens
+    except:
+        caminho = raw_input("Insira o caminho do dataset de imagens: ")
+    try:
+        with open('treino.pkl') as f:
+            prototipo, kpca = pickle.load(f)
+    except IOError:
+        print "Arquivo de treino nao encontrado. Treinando..."
+        mat_paths = readpath(caminho, 0) # 0 para treino, 1 para teste
+        dtwt(mat_paths)
+    print 'Testando...'
+    teste(caminho, prototipo, kpca)
 

@@ -28,7 +28,7 @@ __status__ = "Production"
     File name: main.py
     Author: Weverson Nascimento
     Date created: 24/09/2017
-    Date last modified: 03/01/2018
+    Date last modified: 04/01/2018
     Python Version: 2.7
 '''
 
@@ -88,10 +88,10 @@ def readpath(caminho, n):
 def dtwt(mat_paths): # do the whole thing
     prototipo = np.empty([48,93,1])
     kpca = np.empty([48],dtype=object)
-    for rotation in range(10):
+    for rotation in range(48):
         wav_coefs = np.empty([0,3685])
         for pose in range(93):
-            print 'rotacao ' + str(rotation) + '/9 pose ' + str(pose) + '/92'
+            print 'rotacao ' + str(rotation) + '/47 pose ' + str(pose) + '/92'
             wav_mean = np.empty([0,3685])
             for person in range(15):
                 img_cropped = pre(mat_paths[pose,person])
@@ -110,9 +110,9 @@ def teste(caminho, prototipo, kpca):
     mat_paths = readpath(caminho, 1)
     dk = np.empty([93*15,48],dtype=int)
     print 'calculando dk'
-    for rotation in range(10):
+    for rotation in range(48):
         for pose in range(93):
-            print 'rotacao ' + str(rotation) + '/9 pose ' + str(pose) + '/92'
+            print 'rotacao ' + str(rotation) + '/47 pose ' + str(pose) + '/92'
             for person in range(15):
                 img_cropped = pre(mat_paths[pose,person])
                 trafo_image = wavextract(img_cropped)
@@ -128,7 +128,7 @@ def teste(caminho, prototipo, kpca):
             c = np.argmax(np.bincount(dk[pose+person])) # anota a classe
             acerto[pose+person] = c==pose
     acertos = np.count_nonzero(acerto)
-    taxa = (acertos/93*15)*100
+    taxa = (acertos/(93*15))*100
     print 'acertos = ' + str(acertos) + ' de 1395 (' + str(taxa) + '%)'
 
 
@@ -144,6 +144,8 @@ if __name__ == '__main__':
         print "Arquivo de treino nao encontrado. Treinando..."
         mat_paths = readpath(caminho, 0) # 0 para treino, 1 para teste
         dtwt(mat_paths)
+        with open('treino.pkl') as f:
+            prototipo, kpca = pickle.load(f)
     print 'Testando...'
     teste(caminho, prototipo, kpca)
 

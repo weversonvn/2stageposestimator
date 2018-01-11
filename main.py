@@ -53,7 +53,6 @@ def wavextract(imagem):
     escalas = 6
     gwt = bob.ip.gabor.Transform(number_of_scales = escalas) # cria a transformada
     trafo_image = gwt(imagem) # aplica a transformada na imagem
-    #return trafo_img, escalas, gwt.number_of_directions
     return trafo_image
 
 
@@ -88,27 +87,27 @@ def readpath(caminho, n):
 def treino(mat_paths, p): # do the whole thing
     prototipo = np.empty([48,93,p])
     kpca = np.empty([48],dtype=object)
-    mat_magnitudes = np.empty([48,93])
+    mat_magnitudes = np.empty([48,93,67*55])
     
     print 'Calcula magnitudes das imagens'
     for pose in range(93):
         print 'Pose ' + str(pose) + '/92'
-        magnitudes = np.empty([48,15])
+        magnitudes = np.empty([48,15,67*55])
         for person in range(15):
             img_cropped = pre(mat_paths[pose,person])
             trafo_image = wavextract(img_cropped)
             for rotation in range(48):
-                magnitudes[rotation,person] = np.linalg.norm(trafo_image[rotation])
+                magnitudes[rotation,person] = np.reshape(np.abs(trafo_image[rotation]),67*55)
         for rotation in range(48):
-            mat_magnitudes[rotation,pose] = np.mean(magnitudes[rotation,:])
+            mat_magnitudes[rotation,pose] = np.mean(magnitudes[rotation,:],axis=0)
             
     print 'Faz a projecao'
     for rotation in range(48):
         print 'Rotacao ' + str(rotation) + '/47'
-        wav_coefs = np.reshape(mat_magnitudes[rotation],(93,1))
+        wav_coefs = mat_magnitudes[rotation]
         prototipo[rotation], kpca[rotation] = projecaokpca(wav_coefs,p)
     
-    print 'Salvando'
+    print 'Salvando...'
     with open('treino.pkl','w') as f:     # salva no arquivo treino.pkl
         pickle.dump([prototipo, kpca], f) # as variaveis prototipo e kpca
 
@@ -116,7 +115,7 @@ def treino(mat_paths, p): # do the whole thing
 def teste(caminho, prototipo, kpca):
     mat_paths = readpath(caminho, 1)
     dk = np.empty([93*15,48],dtype=int)
-    mat_magnitudes = np.empty([48,93*15])
+    mat_magnitudes = np.empty([48,93*15,67*55])
     
     print 'Calcula magnitudes das imagens'
     for pose in range(93):
@@ -125,21 +124,20 @@ def teste(caminho, prototipo, kpca):
             img_cropped = pre(mat_paths[pose,person])
             trafo_image = wavextract(img_cropped)
             for rotation in range(48):
-                magnitude = np.linalg.norm(trafo_image[rotation])
+                magnitude = np.reshape(np.abs(trafo_image[rotation]),67*55)
                 mat_magnitudes[rotation,15*pose+person] = magnitude
     
     print 'Calcula dk'
     y = np.empty([48,93*15,1])
     for rotation in range(48):
-        print 'Rotacao ' + str(rotation) + '/47'
-        x = np.reshape(mat_magnitudes[rotation],(93*15,1))
-        y[rotation] = kpca[rotation].transform(x)
+        y[rotation] = kpca[rotation].transform(mat_magnitudes[rotation])
     for pose in range(93):
         print 'Pose ' + str(pose) + '/92'
         for person in range(15):
             for rotation in range(48):
                 img = 15*pose+person
-                dk[img,rotation] = np.linalg.norm(y[rotation,img]-prototipo[rotation])
+                d = np.abs(y[rotation,img]-prototipo[rotation])
+                dk[img,rotation] = np.argmin(d)
     
     print 'Calcula acertos'
     acerto = np.empty([93*15],dtype=bool)

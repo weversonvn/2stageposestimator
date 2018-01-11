@@ -116,7 +116,7 @@ def treino(mat_paths, p): # do the whole thing
 def teste(caminho, prototipo, kpca):
     mat_paths = readpath(caminho, 1)
     dk = np.empty([93*15,48],dtype=int)
-    mat_magnitudes = np.empty([48,93,15])
+    mat_magnitudes = np.empty([48,93*15])
     
     print 'Calcula magnitudes das imagens'
     for pose in range(93):
@@ -126,16 +126,20 @@ def teste(caminho, prototipo, kpca):
             trafo_image = wavextract(img_cropped)
             for rotation in range(48):
                 magnitude = np.linalg.norm(trafo_image[rotation])
-                mat_magnitudes[rotation,pose,person] = magnitude
+                mat_magnitudes[rotation,15*pose+person] = magnitude
     
     print 'Calcula dk'
+    y = np.empty([48,93*15,1])
+    for rotation in range(48):
+        print 'Rotacao ' + str(rotation) + '/47'
+        x = np.reshape(mat_magnitudes[rotation],(93*15,1))
+        y[rotation] = kpca[rotation].transform(x)
     for pose in range(93):
         print 'Pose ' + str(pose) + '/92'
         for person in range(15):
             for rotation in range(48):
-                x = np.reshape(mat_magnitudes[rotation,pose,person],(1,1))
-                y = kpca[rotation].transform(x)
-                dk[15*pose+person,rotation] = np.linalg.norm(y-prototipo[rotation])
+                img = 15*pose+person
+                dk[img,rotation] = np.linalg.norm(y[rotation,img]-prototipo[rotation])
     
     print 'Calcula acertos'
     acerto = np.empty([93*15],dtype=bool)

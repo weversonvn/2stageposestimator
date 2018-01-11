@@ -30,7 +30,7 @@ O OpenCV instalado com Anaconda não utiliza GTK, que é necessário para a cria
 3. Dentro da pasta extraída, crie um diretório para armazenar o código compilado `mkdir build` e entre na pasta;
 4. Rode o comando `cmake` semelhante é explicado na documentação do OpenCV, incluindo como parâmetros:
 - o caminho para a instalação do Anaconda (se você fez a instalação padrão do Anaconda, provavelmente será algo como `-D CMAKE_INSTALL_PREFIX=/home/usuario/anaconda2/`);
-- o caminho do executável do Python (o executável do Anaconda, provavelmente será algo como `-D PYTHON2_EXECUTABLE=/home/usuario/anaconda2/bin/python`);
+- o caminho do executável do Python usado no Anaconda (provavelmente será algo como `-D PYTHON2_EXECUTABLE=/home/usuario/anaconda2/bin/python`);
 - o comando para usar GTK `WITH_GTK WITH_GTK_2_X`
 5. O comando final seria algo como `cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/home/usuario/anaconda2/ -D PYTHON2_EXECUTABLE=/home/usuario/anaconda2/bin/python WITH_GTK WITH_GTK_2_X ..`.
 6. Confirme, ao final da execução do `cmake`, se entre os itens que serão compilados está o python. Eventualmente, o python é detectado mas seus componentes não, então seria necessário incluir o restante dos parâmetros manualmente;
@@ -40,7 +40,7 @@ O OpenCV instalado com Anaconda não utiliza GTK, que é necessário para a cria
 
 ### Uso:
 
-Execute `python main.py caminho`, onde __caminho__ é o diretório com o dataset de imagens.
+Execute `python main.py caminho`, onde __caminho__ é o diretório com o dataset de imagens (detalhe que o caminho deve finalizar com /).
 
 ### Licença:
 

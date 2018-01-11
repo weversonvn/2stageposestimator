@@ -85,7 +85,7 @@ def readpath(caminho, n):
     return mat_paths
 
 
-def treino(mat_paths, p): # faz o treinamento dos dados
+def treino(mat_paths, p): # do the whole thing
     prototipo = np.empty([48,93,p])
     kpca = np.empty([48],dtype=object)
     mat_magnitudes = np.empty([48,93])
@@ -116,27 +116,37 @@ def treino(mat_paths, p): # faz o treinamento dos dados
 def teste(caminho, prototipo, kpca):
     mat_paths = readpath(caminho, 1)
     dk = np.empty([93*15,48],dtype=int)
-    print 'Calculando dk'
-    for rotation in range(48):
-        print 'rotacao ' + str(rotation) + '/47'
-        for pose in range(93):
-            for person in range(15):
-                img_cropped = pre(mat_paths[pose,person])
-                trafo_image = wavextract(img_cropped)
-                magnitude = np.abs(trafo_image[rotation]) # usa somente a magnitude
-                wav_vet = np.reshape(magnitude,(1,3685))
-                y = kpca[rotation].transform(wav_vet)
-                dk[15*pose+person,rotation] = np.argmin(np.reshape(np.abs(y-prototipo[rotation]),93))
-    acerto = np.empty([93*15],dtype=bool)
-    print 'Calculando acertos'
+    mat_magnitudes = np.empty([48,93,15])
+    
+    print 'Calcula magnitudes das imagens'
     for pose in range(93):
-        print 'pose ' + str(pose) + '/92'
+        print 'Pose ' + str(pose) + '/92'
+        for person in range(15):
+            img_cropped = pre(mat_paths[pose,person])
+            trafo_image = wavextract(img_cropped)
+            for rotation in range(48):
+                magnitude = np.linalg.norm(trafo_image[rotation])
+                mat_magnitudes[rotation,pose,person] = magnitude
+    
+    print 'Calcula dk'
+    for pose in range(93):
+        print 'Pose ' + str(pose) + '/92'
+        for person in range(15):
+            for rotation in range(48):
+                x = np.reshape(mat_magnitudes[rotation,pose,person],(1,1))
+                y = kpca[rotation].transform(x)
+                dk[15*pose+person,rotation] = np.linalg.norm(y-prototipo[rotation])
+    
+    print 'Calcula acertos'
+    acerto = np.empty([93*15],dtype=bool)
+    for pose in range(93):
+        print 'Pose ' + str(pose) + '/92'
         for person in range(15):
             c = np.argmax(np.bincount(dk[15*pose+person])) # anota a classe
             acerto[15*pose+person] = c==pose
     acertos = np.count_nonzero(acerto)
     taxa = (acertos*100)/(93*15);
-    print 'acertos = ' + str(acertos) + ' de 1395 (' + str(taxa) + '%)'
+    print 'Acertos = ' + str(acertos) + ' de 1395 (' + str(taxa) + '%)'
 
 
 if __name__ == '__main__':
@@ -155,6 +165,5 @@ if __name__ == '__main__':
         with open('treino.pkl') as f:
             prototipo, kpca = pickle.load(f)
     print 'Testando...'
-    #teste(caminho, prototipo, kpca)
-    newtest(caminho, prototipo, kpca)
+    teste(caminho, prototipo, kpca)
 

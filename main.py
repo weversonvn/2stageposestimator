@@ -99,7 +99,16 @@ def treino(mat_paths, p): # do the whole thing
             for rotation in range(48):
                 magnitudes[rotation,person] = np.reshape(np.abs(trafo_image[rotation]),67*55)
         for rotation in range(48):
-            mat_magnitudes[rotation,pose] = np.mean(magnitudes[rotation,:],axis=0)
+            vet = np.zeros([67*55])
+            cont = 0;
+            for person in range(15):
+                if not np.linalg.norm(magnitudes[rotation,person]) == 0:
+                    cont += 1;
+                    vet += magnitudes[rotation,person]
+            media = vet/cont;
+            if np.isnan(np.linalg.norm(media)):
+                media = 0;
+            mat_magnitudes[rotation,pose] = media
             
     print 'Faz a projecao'
     for rotation in range(48):
@@ -130,9 +139,9 @@ def teste(caminho, prototipo, kpca):
     print 'Calcula dk'
     y = np.empty([48,93*15,1])
     for rotation in range(48):
+        print 'Rotacao ' + str(rotation) + '/47'
         y[rotation] = kpca[rotation].transform(mat_magnitudes[rotation])
     for pose in range(93):
-        print 'Pose ' + str(pose) + '/92'
         for person in range(15):
             for rotation in range(48):
                 img = 15*pose+person

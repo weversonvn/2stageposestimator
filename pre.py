@@ -28,15 +28,27 @@ __status__ = "Production"
     File name: pre.py
     Author: Weverson Nascimento
     Date created: 24/09/2017
-    Date last modified: 25/12/2017
+    Date last modified: 14/01/2018
     Python Version: 2.7
 '''
 
 import numpy as np
 import cv2
 
+def preds(caminho, mat_pre): # pre processamento do dataset
+    x, y, w, h = mat_pre
+    xt1 = x - w / 2
+    xt2 = x + w / 2
+    yt1 = y - h / 2
+    yt2 = y + h / 2
+    img = cv2.imread(caminho)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # converte para tons de cinza
+    roi_gray = gray[yt1:yt2, xt1:xt2] # crop gray image
+    resized_img = cv2.resize(roi_gray, (55,67))
+    return resized_img
 
-def pre(caminho):
+
+def pregeral(caminho):
     # importa os classificadores
     face_cascade = cv2.CascadeClassifier('/home/weverson/anaconda2/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml') # arquivo do classificador de face
     eye_cascade = cv2.CascadeClassifier('/home/weverson/anaconda2/share/OpenCV/haarcascades/haarcascade_eye.xml') # arquivo do classificador de olhos
@@ -55,5 +67,4 @@ def pre(caminho):
         eyes = eye_cascade.detectMultiScale(roi_gray) # detect eyes
         for (ex,ey,ew,eh) in eyes:
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2) # draw a rectangle on each eye detected
-
     return resized_img

@@ -42,8 +42,7 @@ import matplotlib.pyplot as plt
 import bob.ip.gabor
 from sklearn.svm import SVC
 
-from pre import pre
-from kpcasub import projecaokpca
+from pre import preds
 
 #print(__doc__)
 
@@ -66,6 +65,7 @@ def readpath(caminho, n):
     pessoa = 1
     serie = 1
     mat_paths = np.empty([93,15],dtype=object)
+    mat_pre = np.empty([93,15,4],dtype=int)
     for i in range(93):
         for serie in range(n+1,n+2):
             for pessoa in range(1,16):
@@ -86,25 +86,39 @@ def readpath(caminho, n):
                     panplus = "+"
                 if tilt >= 0:
                     tiltplus = "+"
-                mat_paths[i,pessoa-1] = caminho + 'Person' + str(pessoa).zfill(2) + '/person' + str(pessoa).zfill(2) + str(serie) + str(i).zfill(2) + tiltplus + str(tilt) + panplus + str(pan) + '.jpg'
-    return mat_paths
+                arquivo = caminho + 'Person' + str(pessoa).zfill(2) + '/person' + str(pessoa).zfill(2) + str(serie) + str(i).zfill(2) + tiltplus + str(tilt) + panplus + str(pan)
+                mat_paths[i,pessoa-1] = arquivo + '.jpg'
+                txt = arquivo + '.txt'
+                f = open(txt,'r')
+                k = 0
+                for line in f:
+                    k = k + 1
+                    if k == 4:
+                        mat_pre[i,pessoa-1,0] = int(line)
+                    elif k == 5:
+                        mat_pre[i,pessoa-1,1] = int(line)
+                    elif k == 6:
+                        mat_pre[i,pessoa-1,2] = int(line)
+                    elif k == 7:
+                        mat_pre[i,pessoa-1,3] = int(line)
+    return mat_paths, mat_pre
 
 
-def treino(mat_paths): # treina o classificador
+def treino(mat_paths, mat_pre): # treina o classificador
     clf = np.empty([48],dtype=object) # o classificador svc por resolucao
-    mat_magnitudes = np.empty([48,93,67*55]) # as magnitudes de transformada
+    mat_magnitudes = np.empty([48,93*15,67*55]) # as magnitudes de transformada
     y = np.empty([93*15],dtype=int) # a classe correspondente das imagens
     
     print 'Calcula magnitudes das imagens'
     for pose in range(93):
         print 'Pose ' + str(pose) + '/92'
-        magnitudes = np.empty([48,15,67*55])
         for person in range(15):
-            img_cropped = pre(mat_paths[pose,person]) # a imagem da face
+            img_cropped = preds(mat_paths[pose,person], mat_pre[pose,person]) # a imagem da face
             trafo_image = wavextract(img_cropped) # a transf. de Gabor
             y[15*pose+person] = pose # a classe dessa imagem
             for rotation in range(48):
-                magnitudes[rotation,person] = np.reshape(np.abs(trafo_image[rotation]),67*55) # vetoriza a imagem
+                magnitude = np.reshape(np.abs(trafo_image[rotation]),67*55) # vetoriza a imagem
+                mat_magnitudes[rotation,15*pose+person] = magnitude # salva a magnitude na matriz
             
     print 'Faz a projecao'
     for rotation in range(48):
@@ -118,7 +132,7 @@ def treino(mat_paths): # treina o classificador
 
 
 def teste(caminho, clf):
-    mat_paths = readpath(caminho, 1)
+    mat_paths, mat_pre = readpath(caminho, 1)
     mat_magnitudes = np.empty([48,93*15,67*55])
     y = np.empty([48,93*15],dtype=int) # a classe esperada pelo classificador
     
@@ -126,7 +140,7 @@ def teste(caminho, clf):
     for pose in range(93):
         print 'Pose ' + str(pose) + '/92'
         for person in range(15):
-            img_cropped = pre(mat_paths[pose,person])
+            img_cropped = preds(mat_paths[pose,person], mat_pre[pose,person])
             trafo_image = wavextract(img_cropped)
             for rotation in range(48):
                 magnitude = np.reshape(np.abs(trafo_image[rotation]),67*55)
@@ -136,7 +150,7 @@ def teste(caminho, clf):
     for rotation in range(48):
         print 'Rotacao ' + str(rotation) + '/47'
         y[rotation] = clf[rotation].predict(mat_magnitudes[rotation])
-    d = y.T # transpoe a matriz para analizar por resolucao e n por img
+    d = y.T # transpoe a matriz para analizar por resolucao e nao por img
     print 'Calcula acertos'
     acerto = np.empty([93*15],dtype=bool)
     for pose in range(93):
@@ -144,7 +158,7 @@ def teste(caminho, clf):
         for person in range(15):
             img = 15*pose+person
             c = np.argmax(np.bincount(d[img])) # anota a classe prevista
-            acerto[1img] = c==pose # compara a classe prevista com a real
+            acerto[img] = c==pose # compara a classe prevista com a real
     acertos = np.count_nonzero(acerto) # conta a quantidade de acertos
     taxa = (acertos*100)/(93*15);
     print 'Acertos = ' + str(acertos) + '/1395 (' + str(taxa) + '%)'
@@ -155,14 +169,14 @@ if __name__ == '__main__':
         caminho = sys.argv[1] # o caminho do dataset de imagens
     except:
         caminho = raw_input("Insira o caminho do dataset de imagens: ")
-    p = 1 # numero de autovetores da projecao kpca
+    print 'Carregando arquivo de treino...'
     try:
         with open('treino.pkl') as f:
             clf = pickle.load(f)
     except IOError:
         print "Arquivo de treino nao encontrado. Treinando..."
-        mat_paths = readpath(caminho, 0) # 0 para treino, 1 para teste
-        treino(mat_paths, p)
+        mat_paths, mat_pre = readpath(caminho, 0) # 0: treino, 1: teste
+        treino(mat_paths, mat_pre)
         with open('treino.pkl') as f:
             clf = pickle.load(f)
     print 'Testando...'

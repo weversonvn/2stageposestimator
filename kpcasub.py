@@ -28,7 +28,7 @@ __status__ = "Production"
     File name: kpcasub.py
     Author: Weverson Nascimento
     Date created: 14/12/2017
-    Date last modified: 06/01/2017
+    Date last modified: 16/01/2017
     Python Version: 2.7
 '''
 
@@ -36,7 +36,7 @@ __status__ = "Production"
 from sklearn.decomposition import KernelPCA
 
 def projecaokpca(X, p):
-    kpca = KernelPCA(n_components=p, kernel="rbf", n_jobs=-1)
+    kpca = KernelPCA(n_components=p, kernel="rbf", copy_X=False, n_jobs=-1)
     coeficientes = kpca.fit_transform(X)
 
     return coeficientes, kpca

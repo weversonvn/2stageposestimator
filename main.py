@@ -240,6 +240,7 @@ def teste(caminho, classificador, clf, conj=None, prototipo=None): # testa o cla
         dk = y.T # transpoe a matriz para analizar por resolucao e nao por img
     
     acertos, taxa = calculacertos(dk, classificador, poses)
+    taxas[indice] = taxa
     print 'Acertos ' + classificador + ' = ' + str(acertos) + '/' + str(classes*15) + ' (' + str(taxa) + '%)'
 
 
@@ -249,8 +250,10 @@ if __name__ == '__main__':
     except:
         caminho = raw_input("Insira o caminho do dataset de imagens: ")
     p = 10 # numero de autovetores da projecao kpca
-    conj = [15,45,77] # classes usadas no treino e teste
+    conj = [15,45,77,82] # classes usadas no treino e teste
     print "Quantidade de classes: " + str(len(conj))
+    indice = 0 # indice do vetor de taxas
+    taxas = np.empty(3) # armazena as taxas de acerto
     for classificador in ('kpca', 'svc', 'lda'):
         trainfile = 'treino' + classificador + '.pkl'
         prototipo = None
@@ -266,4 +269,13 @@ if __name__ == '__main__':
         except IOError:
             print "Arquivo de treino nao encontrado. Treinando..."
             treino(caminho, classificador, conj, p)
-
+        indice += 1
+    fig, ax = plt.subplots() # cria figura para plot de acertos
+    plt.bar(np.arange(1,4),taxas)
+    ax.set_xticks(np.arange(1,4))
+    ax.set_xticklabels(['KPCA','SVC','LDA'])
+    ax.set_ylabel('Porcentagem de acertos')
+    ax.set_title('Acertos com quantidade de classes = ' + str(len(conj)))
+    filename = 'fig' + str(len(conj)-1) + '.pdf'
+    fig.savefig(filename)
+    plt.show()

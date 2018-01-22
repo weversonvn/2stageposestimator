@@ -28,7 +28,7 @@ __status__ = "Production"
     File name: main.py
     Author: Weverson Nascimento
     Date created: 24/09/2017
-    Date last modified: 20/01/2018
+    Date last modified: 21/01/2018
     Python Version: 2.7
 '''
 
@@ -242,4 +242,3 @@ if __name__ == '__main__':
         except IOError:
             print "Arquivo de treino nao encontrado. Treinando..."
             treino(caminho, classificador, p)
-

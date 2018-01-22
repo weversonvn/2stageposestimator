@@ -28,7 +28,7 @@ __status__ = "Production"
     File name: main.py
     Author: Weverson Nascimento
     Date created: 24/09/2017
-    Date last modified: 14/01/2018
+    Date last modified: 21/01/2018
     Python Version: 2.7
 '''
 
@@ -40,9 +40,9 @@ import pickle # para salvar em arquivo as variaveis
 import cv2
 import matplotlib.pyplot as plt
 import bob.ip.gabor
-from sklearn.svm import SVC
 
 from pre import preds
+from classifier import projecaokpca, projecaosvc, projecaolda
 
 #print(__doc__)
 
@@ -52,16 +52,11 @@ def wavextract(imagem):
     escalas = 6
     gwt = bob.ip.gabor.Transform(number_of_scales = escalas) # cria a transformada
     trafo_image = gwt(imagem) # aplica a transformada na imagem
-    return trafo_image
+    magnitude = np.reshape(np.abs(trafo_image),(48,67*55))
+    return magnitude
 
 
-def projecaosvc(wav_coefs, y):
-    clf = SVC()
-    classificador = clf.fit(wav_coefs,y)
-    return classificador
-
-
-def readpath(caminho, n):
+def readpath(caminho, n): # adaptado de Gourier2004 (disponivel com o dataset)
     pessoa = 1
     serie = 1
     mat_paths = np.empty([93,15],dtype=object)
@@ -104,64 +99,126 @@ def readpath(caminho, n):
     return mat_paths, mat_pre
 
 
-def treino(mat_paths, mat_pre): # treina o classificador
-    clf = np.empty([48],dtype=object) # o classificador svc por resolucao
-    mat_magnitudes = np.empty([48,93*15,67*55]) # as magnitudes de transformada
+def magnitudes(mat_paths, mat_pre):
+    mat_magnitudes = np.empty([48,93*15,67*55]) # as magnitudes de transformada de gabor
     y = np.empty([93*15],dtype=int) # a classe correspondente das imagens
     
     print 'Calcula magnitudes das imagens'
     for pose in range(93):
-        print 'Pose ' + str(pose) + '/92'
+        #print 'Pose ' + str(pose) + '/92'
         for person in range(15):
-            img_cropped = preds(mat_paths[pose,person], mat_pre[pose,person]) # a imagem da face
-            trafo_image = wavextract(img_cropped) # a transf. de Gabor
-            y[15*pose+person] = pose # a classe dessa imagem
+            index = 15*pose+person
+            y[index] = pose
+            img = mat_paths[pose,person]
+            img_cropped = preds(img, mat_pre[pose,person]) # a imagem da face
+            magnitude = wavextract(img_cropped) # a transf. de Gabor
             for rotation in range(48):
-                magnitude = np.reshape(np.abs(trafo_image[rotation]),67*55) # vetoriza a imagem
-                mat_magnitudes[rotation,15*pose+person] = magnitude # salva a magnitude na matriz
-            
-    print 'Faz a projecao'
-    for rotation in range(48):
-        print 'Rotacao ' + str(rotation) + '/47'
-        wav_coefs = mat_magnitudes[rotation] # coeficientes por rotacao
-        clf[rotation] = projecaosvc(wav_coefs,y) # treina o classificador
-    
-    print 'Salvando...'
-    with open('treino.pkl','w') as f: # salva no arquivo treino.pkl
-        pickle.dump(clf, f)           # a variavel clf
+                mat_magnitudes[rotation,index] = magnitude[rotation] # salva a magnitude na matriz
+    return mat_magnitudes, y
 
-
-def teste(caminho, clf):
-    mat_paths, mat_pre = readpath(caminho, 1)
-    mat_magnitudes = np.empty([48,93*15,67*55])
-    y = np.empty([48,93*15],dtype=int) # a classe esperada pelo classificador
-    
-    print 'Calcula magnitudes das imagens'
-    for pose in range(93):
-        print 'Pose ' + str(pose) + '/92'
-        for person in range(15):
-            img_cropped = preds(mat_paths[pose,person], mat_pre[pose,person])
-            trafo_image = wavextract(img_cropped)
-            for rotation in range(48):
-                magnitude = np.reshape(np.abs(trafo_image[rotation]),67*55)
-                mat_magnitudes[rotation,15*pose+person] = magnitude
-    
-    print 'Determina classes esperadas'
-    for rotation in range(48):
-        print 'Rotacao ' + str(rotation) + '/47'
-        y[rotation] = clf[rotation].predict(mat_magnitudes[rotation])
-    d = y.T # transpoe a matriz para analizar por resolucao e nao por img
-    print 'Calcula acertos'
+def calculacertos(dk):
     acerto = np.empty([93*15],dtype=bool)
+    print 'Calcula acertos'
     for pose in range(93):
-        print 'Pose ' + str(pose) + '/92'
         for person in range(15):
             img = 15*pose+person
-            c = np.argmax(np.bincount(d[img])) # anota a classe prevista
+            c = np.argmax(np.bincount(dk[img])) # anota a classe prevista
             acerto[img] = c==pose # compara a classe prevista com a real
     acertos = np.count_nonzero(acerto) # conta a quantidade de acertos
-    taxa = (acertos*100)/(93*15);
-    print 'Acertos = ' + str(acertos) + '/1395 (' + str(taxa) + '%)'
+    taxa = (acertos*100)/(93*15); # calcula a taxa de acertos
+    return acertos, taxa
+
+
+def treino(caminho, classificador, p=10): # treina o classificador
+    mat_paths, mat_pre = readpath(caminho, 0) # 0: treino, 1: teste
+    prototipo = np.empty([48,93,p]) # o prototipo que sera comparado com a imagem de teste
+    clf = np.empty([48],dtype=object) # o objeto que aplica a transformacao kpca no teste
+    mat_magnitudes, y = magnitudes(mat_paths, mat_pre) # obtem as magnitudes da imagem
+    
+    print 'Treina o classificador ' + classificador
+    if classificador == 'kpca':
+        for rotation in range(48):
+            #print 'Rotacao ' + str(rotation) + '/47'
+            wav_coefs = mat_magnitudes[rotation] # coeficientes por rotacao
+            projecoes, clf[rotation] = projecaokpca(wav_coefs,p) # treina o classificador
+            for pose in range(93):
+                interval = projecoes[15*pose:15*pose+15]
+                prototipo[rotation,pose] = np.mean(interval,axis=0)
+        del mat_magnitudes, wav_coefs, y, projecoes
+    
+        print 'Salvando...'
+        with open('treinokpca.pkl','w') as f:     # salva arquivo de treino
+            pickle.dump([prototipo, clf], f)
+        
+        print 'Testando...'
+        teste(caminho, classificador, clf, prototipo)
+    
+    elif classificador == 'svc':
+        for rotation in range(48):
+            #print 'Rotacao ' + str(rotation) + '/47'
+            wav_coefs = mat_magnitudes[rotation] # coeficientes por rotacao
+            clf[rotation] = projecaosvc(wav_coefs,y) # treina o classificador
+        del mat_magnitudes, wav_coefs, y
+        
+        print 'Salvando...'
+        with open('treinosvc.pkl','w') as f:     # salva arquivo de treino
+            pickle.dump(clf, f)
+        
+        print 'Testando...'
+        teste(caminho, classificador, clf)
+    
+    elif classificador == 'lda':
+        for rotation in range(48):
+            #print 'Rotacao ' + str(rotation) + '/47'
+            wav_coefs = mat_magnitudes[rotation] # coeficientes por rotacao
+            clf[rotation] = projecaolda(wav_coefs,y) # treina o classificador
+        del mat_magnitudes, wav_coefs, y
+        
+        print 'Salvando...'
+        with open('treinolda.pkl','w') as f:     # salva arquivo de treino
+            pickle.dump(clf, f)
+        
+        print 'Testando...'
+        teste(caminho, classificador, clf)
+
+
+def teste(caminho, classificador, clf, prototipo=None): # testa o classificador
+    mat_paths, mat_pre = readpath(caminho, 1)
+    mat_magnitudes, y = magnitudes(mat_paths, mat_pre) # obtem as magnitudes da imagem
+    
+    print 'Determina classes esperadas ' + classificador
+    if classificador == 'kpca':
+        dk = np.empty([93*15,48],dtype=int) # armazena as poses estimadas por rotacao para cada imagem
+        y = np.empty([48,93*15,p]) # os prototipos de teste por resolucao
+        for rotation in range(48):
+            #print 'Rotacao ' + str(rotation) + '/47'
+            y[rotation] = clf[rotation].transform(mat_magnitudes[rotation]) # aplica o kpca na resolucao correspondente
+        for pose in range(93):
+            for person in range(15):
+                for rotation in range(48):
+                    img = 15*pose+person
+                    d = np.linalg.norm(y[rotation,img]-prototipo[rotation],axis=1) # calcula a norma da diferenca de y com cada prototipo
+                    dk[img,rotation] = np.argmin(d) # a pose estimada tem a menor norma
+        acertos, taxa = calculacertos(dk)
+        print 'Acertos ' + classificador + ' = ' + str(acertos) + '/1395 (' + str(taxa) + '%)'
+    
+    elif classificador == 'svc':
+        y = np.empty([48,93*15],dtype=int) # a classe esperada pelo classificador
+        for rotation in range(48):
+            #print 'Rotacao ' + str(rotation) + '/47'
+            y[rotation] = clf[rotation].predict(mat_magnitudes[rotation])
+        d = y.T # transpoe a matriz para analizar por resolucao e nao por img
+        acertos, taxa = calculacertos(d)
+        print 'Acertos ' + classificador + ' = ' + str(acertos) + '/1395 (' + str(taxa) + '%)'
+    
+    elif classificador == 'lda':
+        y = np.empty([48,93*15],dtype=int) # a classe esperada pelo classificador
+        for rotation in range(48):
+            #print 'Rotacao ' + str(rotation) + '/47'
+            y[rotation] = clf[rotation].predict(mat_magnitudes[rotation])
+        d = y.T # transpoe a matriz para analizar por resolucao e nao por img
+        acertos, taxa = calculacertos(d)
+        print 'Acertos ' + classificador + ' = ' + str(acertos) + '/1395 (' + str(taxa) + '%)'
 
 
 if __name__ == '__main__':
@@ -169,16 +226,19 @@ if __name__ == '__main__':
         caminho = sys.argv[1] # o caminho do dataset de imagens
     except:
         caminho = raw_input("Insira o caminho do dataset de imagens: ")
-    print 'Carregando arquivo de treino...'
-    try:
-        with open('treino.pkl') as f:
-            clf = pickle.load(f)
-    except IOError:
-        print "Arquivo de treino nao encontrado. Treinando..."
-        mat_paths, mat_pre = readpath(caminho, 0) # 0: treino, 1: teste
-        treino(mat_paths, mat_pre)
-        with open('treino.pkl') as f:
-            clf = pickle.load(f)
-    print 'Testando...'
-    teste(caminho, clf)
-
+    p = 10 # numero de autovetores da projecao kpca
+    for classificador in ('kpca', 'svc', 'lda'):
+        trainfile = 'treino' + classificador + '.pkl'
+        prototipo = None
+        try:
+            with open(trainfile) as f:
+                print 'Carregando arquivo de treino'
+                if classificador == 'kpca':
+                    prototipo, clf = pickle.load(f)
+                else:
+                    clf = pickle.load(f)
+            print 'Testando...'
+            teste(caminho, classificador, clf, prototipo)
+        except IOError:
+            print "Arquivo de treino nao encontrado. Treinando..."
+            treino(caminho, classificador, p)

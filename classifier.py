@@ -28,15 +28,30 @@ __status__ = "Production"
     File name: kpcasub.py
     Author: Weverson Nascimento
     Date created: 14/12/2017
-    Date last modified: 16/01/2017
+    Date last modified: 19/01/2017
     Python Version: 2.7
 '''
 
 
 from sklearn.decomposition import KernelPCA
+from sklearn.svm import SVC
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as lda
 
-def projecaokpca(X, p):
+
+def projecaokpca(x, p=10):
     kpca = KernelPCA(n_components=p, kernel="rbf", copy_X=False, n_jobs=-1)
-    coeficientes = kpca.fit_transform(X)
-
+    coeficientes = kpca.fit_transform(x)
     return coeficientes, kpca
+
+
+def projecaosvc(x, y):
+    clf = SVC()
+    classificador = clf.fit(x,y)
+    return classificador
+
+
+def projecaolda(x, y):
+    clf = lda()
+    classificador = clf.fit(x,y)
+    return classificador
+    
